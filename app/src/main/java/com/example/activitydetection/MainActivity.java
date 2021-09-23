@@ -35,6 +35,7 @@ import java.io.ObjectInputStream;
 import java.util.ArrayList;
 
 import weka.classifiers.Classifier;
+import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.trees.J48;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -86,20 +87,6 @@ public class MainActivity extends AppCompatActivity {
     private SensorEventListener mGyroListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent sensorEvent) {
-            data[3] = sensorEvent.values[0];
-            data[4] = sensorEvent.values[1];
-            data[5] = sensorEvent.values[2];
-            i[1] = true;
-        }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int i) {
-
-        }
-    };
-    private SensorEventListener mMeganutListener = new SensorEventListener() {
-        @Override
-        public void onSensorChanged(SensorEvent sensorEvent) {
             data[6] = sensorEvent.values[0];
             data[7] = sensorEvent.values[1];
             data[8] = sensorEvent.values[2];
@@ -111,13 +98,27 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
-    private SensorEventListener mLaccListener = new SensorEventListener() {
+    private SensorEventListener mMeganutListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent sensorEvent) {
             data[9] = sensorEvent.values[0];
             data[10] = sensorEvent.values[1];
             data[11] = sensorEvent.values[2];
             i[3] = true;
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int i) {
+
+        }
+    };
+    private SensorEventListener mLaccListener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent sensorEvent) {
+            data[3] = sensorEvent.values[0];
+            data[4] = sensorEvent.values[1];
+            data[5] = sensorEvent.values[2];
+            i[1] = true;
         }
 
         @Override
@@ -138,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
         mAcc = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMeganut = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         mLacc = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        InputStream in = getResources().openRawResource(R.raw.jfourtyeightmodel);
+        InputStream in = getResources().openRawResource(R.raw.newmodeljfe);
         try {
             model = (J48) (new ObjectInputStream(in)).readObject();
             System.out.println("model created");
@@ -201,11 +202,13 @@ public class MainActivity extends AppCompatActivity {
 
             attributes = new ArrayList();
             classval = new ArrayList();
-            classval.add("stairs");
             classval.add("walking");
+            classval.add("standing");
+            classval.add("jogging");
             classval.add("sitting");
-            classval.add("running");
             classval.add("biking");
+            classval.add("upstairs");
+            classval.add("downstairs");
 
             attributes.add(ax);
             attributes.add(ay);
