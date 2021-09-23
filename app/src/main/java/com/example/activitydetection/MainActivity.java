@@ -6,6 +6,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -17,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import weka.classifiers.bayes.NaiveBayes;
+import weka.classifiers.bayes.NaiveBayesUpdateable;
 import weka.classifiers.trees.J48;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -30,9 +36,11 @@ public class MainActivity extends AppCompatActivity {
     private Sensor mLacc;
     private double[] data = new double[12];
     private boolean[] i = new boolean[4];
-    private J48 model;
+    private NaiveBayes model;
     private DataInstance ins;
     private ArrayList<String> list = new ArrayList<>();
+    private boolean play = false;
+    private PowerManager.WakeLock wakeLock;
 
     private SensorEventListener mAccListener = new SensorEventListener() {
         @Override
@@ -49,19 +57,22 @@ public class MainActivity extends AppCompatActivity {
             }
             if(!isNotFull){
                 try {
-                    list.add(ins.classify(ins.createInstance(data),model));
+                    String temp = ins.classify(ins.createInstance(data),model);
+                    list.add(temp);
                     if (list.size() == 100){
-                        System.out.println(mostCommon(list));
+                        TextView textView = findViewById(R.id.textview_processed);
+                        textView.setText("Processed: " + mostCommon(list));
                         list = new ArrayList<>();
                     }
+                    TextView textView = findViewById(R.id.textview_raw);
+                    textView.setText("Raw: " + temp);
                     data = new double[12];
                     clear();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-
-                }
+        }
 
         @Override
         public void onAccuracyChanged(Sensor sensor, int i) {
@@ -133,6 +144,26 @@ public class MainActivity extends AppCompatActivity {
     public final void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         clear();
+
+//        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+//        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+//                "MyApp::Partial Lock");
+//        wakeLock.acquire();
+
+        Button start = (Button) findViewById(R.id.startButton);
+//        start.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                if (play) {
+//                    play = false;
+//                    start.setText("Start");
+//                } else if (!play) {
+//                    play = true;
+//                    start.setText("Stop");
+//                }
+//            }
+//        });
+
         ins = new DataInstance();
         setContentView(R.layout.activity_main);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -141,9 +172,9 @@ public class MainActivity extends AppCompatActivity {
         mAcc = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMeganut = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         mLacc = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        InputStream in = getResources().openRawResource(R.raw.newmodeljfe);
+        InputStream in = getResources().openRawResource(R.raw.finalnaivebayes);
         try {
-            model = (J48) (new ObjectInputStream(in)).readObject();
+            model = (NaiveBayes) (new ObjectInputStream(in)).readObject();
             System.out.println("model created");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -169,6 +200,12 @@ public class MainActivity extends AppCompatActivity {
         sensorManager.unregisterListener(mAccListener);
         sensorManager.unregisterListener(mMeganutListener);
         sensorManager.unregisterListener(mLaccListener);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+//        wakeLock.release();
     }
 
     public void clear(){
@@ -235,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
             dataRaw.add(new DenseInstance(1.0, data));
             return dataRaw;
         }
-        public String classify(Instances ins, J48 model) throws Exception {
+        public String classify(Instances ins, NaiveBayes model) throws Exception {
             return (String) classval.get((int) model.classifyInstance(ins.firstInstance()));
         }
 
