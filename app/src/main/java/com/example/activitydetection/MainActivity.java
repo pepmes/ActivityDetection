@@ -1,7 +1,5 @@
 package com.example.activitydetection;
 
-import android.app.Activity;
-import android.app.ServiceStartNotAllowedException;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -9,37 +7,19 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 
-import com.google.android.material.snackbar.Snackbar;
-
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.util.Log;
-import android.view.View;
-
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import com.example.activitydetection.databinding.ActivityMainBinding;
-
-import android.view.Menu;
-import android.view.MenuItem;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import weka.classifiers.Classifier;
-import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.trees.J48;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
-import weka.core.Instance;
 import weka.core.Instances;
 
 public class MainActivity extends AppCompatActivity {
@@ -52,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean[] i = new boolean[4];
     private J48 model;
     private DataInstance ins;
+    private ArrayList<String> list = new ArrayList<>();
 
     private SensorEventListener mAccListener = new SensorEventListener() {
         @Override
@@ -68,7 +49,11 @@ public class MainActivity extends AppCompatActivity {
             }
             if(!isNotFull){
                 try {
-                    System.out.println(ins.classify(ins.createInstance(data),model));
+                    list.add(ins.classify(ins.createInstance(data),model));
+                    if (list.size() == 100){
+                        System.out.println(mostCommon(list));
+                        list = new ArrayList<>();
+                    }
                     data = new double[12];
                     clear();
                 } catch (Exception e) {
@@ -83,6 +68,23 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
+    public static <String> String mostCommon(List<String> list) {
+        Map<String, Integer> map = new HashMap<>();
+
+        for (String t : list) {
+            Integer integer = map.get(t);
+            map.put(t, integer == null ? 1 : integer + 1);
+        }
+
+        Map.Entry<String, Integer> max = null;
+
+        for (Map.Entry<String, Integer> e : map.entrySet()) {
+            if (max == null || e.getValue() > max.getValue())
+                max = e;
+        }
+
+        return max.getKey();
+    }
 
     private SensorEventListener mGyroListener = new SensorEventListener() {
         @Override
